@@ -1,0 +1,40 @@
+- hosts: all
+  tasks:
+          - name: "Create the yum repository"
+            yum_repository:
+                    name: "docker"
+                    description: "docker-ce yum repo"
+                    baseurl: "https://download.docker.com/linux/centos/7/x86_64/stable/"
+                    gpgcheck: no
+          - name: "Install docker-ce"
+            command:
+                    cmd: "yum install docker-ce --nobest -y"
+          - name: "Start and Enable docker services"
+            service:
+                    name: "docker"
+                    state: started
+                    enabled: yes
+          - name: "Create directory to mount to the container"
+            file:
+                    state: directory
+                    path: "/docker_mount"
+                    mode: "0775"
+          - name: "Put Content in the folder"
+            copy:
+                    content: "Hello this is docker launch by ansible"
+                    dest: "/docker_mount/index.html"
+          - name: "Install python3"
+            package:
+                    name: "python3"
+                    state: present
+          - name: "Install docker-py"
+            pip:
+                    name: "docker-py"
+          - name: "Launch docker container"
+            docker_container:
+                    name: "myc1"
+                    image: "httpd:latest"
+                    volumes:
+                            - "/docker_mount:/usr/local/apache2/htdocs/"
+                    ports:
+                            - "8080:80"
